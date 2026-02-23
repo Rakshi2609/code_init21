@@ -6,12 +6,16 @@ export default function PWAInstallPrompt() {
     const [showPrompt, setShowPrompt] = useState(false)
 
     useEffect(() => {
+        console.log("PWA: Install listener attached")
+
         const handler = (e: any) => {
+            console.log("PWA: beforeinstallprompt event caught!")
             // Prevent the mini-infobar from appearing on mobile
             e.preventDefault()
             // Stash the event so it can be triggered later.
             setDeferredPrompt(e)
-            // Check if user has already dismissed it this session
+
+            // Wait for user interaction or show immediately
             const dismissed = sessionStorage.getItem('pwa-prompt-dismissed')
             if (!dismissed) {
                 setShowPrompt(true)
@@ -20,20 +24,34 @@ export default function PWAInstallPrompt() {
 
         window.addEventListener('beforeinstallprompt', handler)
 
+        // Log current installation state
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA: App was installed')
+            setShowPrompt(false)
+        })
+
+        // Check if already in standalone mode
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            console.log("PWA: Already running in standalone mode")
+        }
+
         return () => {
             window.removeEventListener('beforeinstallprompt', handler)
         }
     }, [])
 
     const handleInstallClick = async () => {
-        if (!deferredPrompt) return
+        if (!deferredPrompt) {
+            console.error("PWA: No deferred prompt available")
+            return
+        }
 
         // Show the install prompt
         deferredPrompt.prompt()
 
         // Wait for the user to respond to the prompt
         const { outcome } = await deferredPrompt.userChoice
-        console.log(`User response to the install prompt: ${outcome}`)
+        console.log(`PWA: User response to the install prompt: ${outcome}`)
 
         // We've used the prompt, and can't use it again
         setDeferredPrompt(null)
@@ -49,9 +67,9 @@ export default function PWAInstallPrompt() {
 
     return (
         <div className="fixed bottom-6 left-6 right-6 md:left-auto md:right-8 md:w-96 z-[100] animate-in slide-in-from-bottom-10 duration-500">
-            <div className="glass-card p-6 border-brand-200 bg-white/95 shadow-2xl relative overflow-hidden">
+            <div className="glass-card p-6 border-brand-200 bg-white/95 shadow-22xl relative overflow-hidden backdrop-blur-xl">
                 {/* Subtle background glow */}
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-brand-500/10 rounded-full blur-2xl"></div>
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-brand-500/10 rounded-full blur-2xl font-sans"></div>
 
                 <div className="flex gap-4 items-start relative z-10">
                     <div className="w-12 h-12 bg-brand-600 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-brand-600/20">
@@ -59,9 +77,9 @@ export default function PWAInstallPrompt() {
                     </div>
 
                     <div className="flex-1">
-                        <h4 className="font-bold text-slate-900 text-lg mb-1 tracking-tight">Install SAMAAN Web App</h4>
+                        <h4 className="font-bold text-slate-900 text-lg mb-1 tracking-tight">Install SAMAAN App</h4>
                         <p className="text-slate-500 text-sm leading-relaxed mb-4">
-                            Get faster access and offline features by adding SAMAAN to your home screen.
+                            Access your pension companion instantly from your home screen, even offline.
                         </p>
 
                         <div className="flex gap-3">
