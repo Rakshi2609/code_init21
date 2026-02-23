@@ -23,13 +23,54 @@ export default function FingerprintScanner({ label = "Tap to scan", onResult }: 
     return () => clearInterval(iv)
   }, [phase])
 
+  async function generateDeviceFingerprint(): Promise<string> {
+    const signals: string[] = []
+
+    // 1. Screen geometry
+    signals.push(`${screen.width}x${screen.height}x${screen.colorDepth}`)
+    signals.push(`dpr${Math.round((window.devicePixelRatio || 1) * 100)}`)
+
+    // 2. Platform / locale / hardware
+    signals.push(navigator.language || 'unknown')
+    signals.push(`cpu${navigator.hardwareConcurrency || 0}`)
+    signals.push(navigator.platform || 'unknown')
+    signals.push(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC')
+
+    // 3. Canvas fingerprint — most stable signal
+    try {
+      const c = document.createElement('canvas')
+      c.width = 220; c.height = 60
+      const ctx = c.getContext('2d')!
+      ctx.fillStyle = '#f80'
+      ctx.fillRect(10, 5, 60, 30)
+      ctx.fillStyle = '#06a'
+      ctx.font = 'bold 14px Arial'
+      ctx.fillText('SAMAAN fp ©', 5, 50)
+      ctx.fillStyle = 'rgba(100,200,0,0.65)'
+      ctx.fillText('SAMAAN fp ©', 7, 52)
+      signals.push(c.toDataURL().slice(-80))
+    } catch { signals.push('no-canvas') }
+
+    // 4. Simple but stable hash
+    const raw = signals.join('||')
+    let h1 = 0x9e3779b9, h2 = 0x6c62272e
+    for (let i = 0; i < raw.length; i++) {
+      const c = raw.charCodeAt(i)
+      h1 = Math.imul(h1 ^ c, 0x9f4f2906) >>> 0
+      h2 = Math.imul(h2 ^ c, 0x2e1a9f4f) >>> 0
+    }
+    const part1 = (h1 >>> 0).toString(16).padStart(8, '0')
+    const part2 = (h2 >>> 0).toString(16).padStart(8, '0')
+    return `fp_${part1}${part2}`
+  }
+
   async function handleScan() {
     if (phase === "scanning") return
     setPhase("scanning")
     setScanY(0)
     await new Promise((r) => setTimeout(r, 1800))
     setPhase("done")
-    const fp = "fp_" + Math.random().toString(36).slice(2, 14)
+    const fp = await generateDeviceFingerprint()
     onResult && onResult(fp)
     setTimeout(() => setPhase("idle"), 700)
   }
