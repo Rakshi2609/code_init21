@@ -1,6 +1,7 @@
 import { Inter } from 'next/font/google'
 import Link from 'next/link'
 import './globals.css'
+import SWRegister from './sw-register'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
@@ -45,6 +46,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="flex-1 bg-surface-50">
           {children}
         </main>
+
+        {/* PWA Registration */}
+        <SWRegister />
 
         {/* Footer */}
         <footer className="bg-white border-t border-slate-200 py-12">
