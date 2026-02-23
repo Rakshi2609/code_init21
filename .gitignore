@@ -8,6 +8,6 @@ venv/
 .DS_Store
 trial/
 docs/
-backend/venv/
+backend/.venv/
 backend/__pycache__/
 frontend/.next/
