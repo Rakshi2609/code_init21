@@ -66,7 +66,7 @@ async def verify_fingerprint(username: str, fingerprint_data: str) -> bool:
 
 async def get_user_by_fingerprint(fingerprint_data: str) -> Optional[dict]:
     """Find the best-matching user whose stored fingerprint is similar enough."""
-    all_users = await db.users.find({"fingerprint": {"$ne": None}}).to_list(length=None)
+    all_users = await db.users.find({"fingerprint": {"$ne": None}})
     best_user = None
     best_score = 0.0
     for user in all_users:

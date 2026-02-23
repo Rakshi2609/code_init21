@@ -28,6 +28,36 @@ class FileUsersCollection:
     async def find_one(self, query: dict):
         return await asyncio.to_thread(self._find_one_sync, query)
 
+    async def find(self, query: dict = None):
+        """Return all matching documents as a simple async-iterable list wrapper."""
+        return await asyncio.to_thread(self._find_sync, query or {})
+
+    def _find_sync(self, query: dict):
+        users = self._read()
+        results = []
+        for uname, doc in users.items():
+            doc_copy = dict(doc)
+            doc_copy["username"] = uname
+            match = True
+            for k, v in query.items():
+                if isinstance(v, dict):  # handle operators like {"$ne": None}
+                    op, operand = next(iter(v.items()))
+                    field_val = uname if k == "username" else doc.get(k)
+                    if op == "$ne" and field_val == operand:
+                        match = False
+                        break
+                    elif op == "$eq" and field_val != operand:
+                        match = False
+                        break
+                else:
+                    field_val = uname if k == "username" else doc.get(k)
+                    if field_val != v:
+                        match = False
+                        break
+            if match:
+                results.append(doc_copy)
+        return results
+
     def _find_one_sync(self, query: dict):
         users = self._read()
         for uname, doc in users.items():
@@ -104,6 +134,12 @@ try:
 
         async def find_one(self, *args, **kwargs) -> Any:
             return await asyncio.to_thread(self._coll.find_one, *args, **kwargs)
+
+        async def find(self, query: dict = None, **kwargs) -> list:
+            """Run a find query and return all results as a plain list."""
+            def _run():
+                return list(self._coll.find(query or {}))
+            return await asyncio.to_thread(_run)
 
         async def insert_one(self, *args, **kwargs) -> Any:
             return await asyncio.to_thread(self._coll.insert_one, *args, **kwargs)
