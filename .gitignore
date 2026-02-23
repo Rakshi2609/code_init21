@@ -11,3 +11,5 @@ docs/
 backend/.venv/
 backend/__pycache__/
 frontend/.next/
+*.log
+backend/app/data/
