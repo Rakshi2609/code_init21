@@ -9,8 +9,8 @@
     "use strict";
 
     // ── Hard-coded LLM Configuration ──────────────────────────────────────
-    const LLM_API_KEY   = "rc_60c188585eec8d6ef4555e65d2d5bfe5056610c480b005f8bdb6748267763077";
-    const LLM_BASE_URL  = "https://api.featherless.ai/v1";
+    const LLM_API_KEY   = "__";
+    const LLM_BASE_URL  = "___";
     const LLM_MODEL     = "openai/gpt-oss-120b";
     const MAX_TOKENS    = 800;   // keep responses tight = faster TTFT
     const MAX_HISTORY   = 8;    // sliding context window: last N messages
